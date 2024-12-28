@@ -26,7 +26,8 @@ class IndexingCommand extends Command
 {
     public function __construct(
         #[Autowire('%kernel.project_dir%')]
-        private string $projectDir
+        private string $projectDir,
+        private OpenSearchVectorStore $vectorStore
     )
     {
         parent::__construct();
@@ -43,15 +44,12 @@ class IndexingCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $arg1 = $input->getArgument('arg1');
-
 
         $reader = new FileDataReader($this->projectDir . '/files');
         $documents = $reader->getDocuments();
 
         $io->info('splitting files into chunks...');
         $splitDocuments = DocumentSplitter::splitDocuments($documents, 512, '.', 128);
-
 
         $io->info('embedding...');
         $embeddingConfig = new OllamaConfig();
@@ -60,14 +58,8 @@ class IndexingCommand extends Command
 
         $embeddingGenerator = new OllamaEmbeddingGenerator($embeddingConfig);
         $embeddingGenerator->embedDocuments($splitDocuments);
-            
-        $opensearchClient = ClientBuilder::create()
-            ->setHosts(['http://opensearch:9200'])
-            ->build();
 
-        $store = new OpenSearchVectorStore($opensearchClient);
-
-        $store->addDocuments($splitDocuments);
+        $this->vectorStore->addDocuments($splitDocuments);
 
         $io->success('Index built successfully');
 

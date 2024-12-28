@@ -27,7 +27,7 @@ class QueryCommand extends Command
     public function __construct(
         #[Autowire('%querySystemTemplate%')]
         private string $querySystemTemplate,
-        private Client $opensearchClient
+        private OpenSearchVectorStore $vectorStore
     )
     {
         parent::__construct();
@@ -44,23 +44,18 @@ class QueryCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        ClientBuilder::create();
-
-        $store = new OpenSearchVectorStore($this->opensearchClient);
-
         $embeddingConfig = new OllamaConfig();
         $embeddingConfig->model = 'bge-m3';
         $embeddingConfig->url = 'http://host.docker.internal:11434/api/';
 
         $embeddingGenerator = new OllamaEmbeddingGenerator($embeddingConfig);
 
-
         $chatConfig = new OllamaConfig();
         $chatConfig->model = 'llama3:latest';
         $chatConfig->url = 'http://host.docker.internal:11434/api/';
 
         $qa = new QuestionAnswering(
-            $store,
+            $this->vectorStore,
             $embeddingGenerator,
             new OllamaChat($chatConfig)
         );
