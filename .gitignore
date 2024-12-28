@@ -1,0 +1,4 @@
+files/*
+vendor
+var/cache
+var/logs
