@@ -4,7 +4,8 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
-    querySystemTemplate: '{context}.'
+    querySystemTemplate: 'Answer with conversational tone. If you do not know the answer, just say that you do not know, do not try to make up an answer. \\n\\n{context}.'
+    ollamaHost: 'http://host.docker.internal:11434/api/'
 
 services:
     # default configuration for services in *this* file
@@ -28,6 +29,27 @@ services:
     LLPhant\Embeddings\VectorStores\OpenSearch\OpenSearchVectorStore:
         class: LLPhant\Embeddings\VectorStores\OpenSearch\OpenSearchVectorStore
         arguments: ['@OpenSearch\Client']
+
+    embedding_config:
+        class: LLPhant\OllamaConfig
+        properties:
+            model: 'bge-m3'
+            url: '%ollamaHost%'
+            stream: false
+            formatJson: false
+            timeout: null
+            modelOptions: []
+    
+    chat_config:
+        class: LLPhant\OllamaConfig
+        properties:
+            model: 'llama3:latest'
+            url: '%ollamaHost%'
+            stream: false
+            formatJson: false
+            timeout: null
+            modelOptions: []
+    
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

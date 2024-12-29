@@ -9,14 +9,10 @@ use LLPhant\Embeddings\VectorStores\OpenSearch\OpenSearchVectorStore;
 use LLPhant\OllamaConfig;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use OpenSearch\Client;
-use OpenSearch\ClientBuilder;
 
 #[AsCommand(
     name: 'app:indexing',
@@ -27,18 +23,12 @@ class IndexingCommand extends Command
     public function __construct(
         #[Autowire('%kernel.project_dir%')]
         private string $projectDir,
-        private OpenSearchVectorStore $vectorStore
+        private OpenSearchVectorStore $vectorStore,
+        #[Autowire(service:'embedding_config')]
+        private OllamaConfig $embeddingConfig
     )
     {
         parent::__construct();
-    }
-
-    protected function configure(): void
-    {
-        $this
-            ->addArgument('arg1', InputArgument::OPTIONAL, 'Argument description')
-            ->addOption('option1', null, InputOption::VALUE_NONE, 'Option description')
-        ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -52,13 +42,10 @@ class IndexingCommand extends Command
         $splitDocuments = DocumentSplitter::splitDocuments($documents, 512, '.', 128);
 
         $io->info('embedding...');
-        $embeddingConfig = new OllamaConfig();
-        $embeddingConfig->model = 'bge-m3';
-        $embeddingConfig->url = 'http://host.docker.internal:11434/api/';
-
-        $embeddingGenerator = new OllamaEmbeddingGenerator($embeddingConfig);
+        $embeddingGenerator = new OllamaEmbeddingGenerator($this->embeddingConfig);
         $embeddingGenerator->embedDocuments($splitDocuments);
 
+        $io->info('indexing...');
         $this->vectorStore->addDocuments($splitDocuments);
 
         $io->success('Index built successfully');
