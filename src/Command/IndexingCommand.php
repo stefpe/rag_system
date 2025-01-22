@@ -16,7 +16,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 #[AsCommand(
     name: 'app:indexing',
-    description: 'Add a short description for your command',
+    description: 'Index files',
 )]
 class IndexingCommand extends Command
 {

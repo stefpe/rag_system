@@ -30,6 +30,12 @@ services:
         class: LLPhant\Embeddings\VectorStores\OpenSearch\OpenSearchVectorStore
         arguments: ['@OpenSearch\Client']
 
+    App\Embeddings\Document\HybridSearchAwareVectoreStoreDecorator:
+        decorates: LLPhant\Embeddings\VectorStores\OpenSearch\OpenSearchVectorStore
+        arguments:
+            - '@.inner'  # The original service instance  
+            - '@OpenSearch\Client'
+
     embedding_config:
         class: LLPhant\OllamaConfig
         properties:

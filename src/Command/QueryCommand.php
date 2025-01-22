@@ -52,8 +52,9 @@ class QueryCommand extends Command
         );
 
         $qa->systemMessageTemplate = $this->querySystemTemplate;
+        $question = $input->getArgument('question');
 
-        $answer = $qa->answerQuestion($input->getArgument('question'));
+        $answer = $qa->answerQuestion($question, 4, ['query' => $question]);
 
         $io->success($answer);
 
